@@ -6,7 +6,9 @@ from dataclasses import dataclass, field
 from typing import Dict, Iterable, List, Mapping, Sequence, Tuple
 
 
-def _ensure_tuple(values: Sequence[int]) -> Tuple[int, ...]:
+def _ensure_tuple(values: Sequence[int] | int) -> Tuple[int, ...]:
+    if isinstance(values, int):
+        return (values,)
     return tuple(int(v) for v in values)
 
 
@@ -260,6 +262,11 @@ class QuantumCircuit:
                     f"Qubit index {index} for gate {gate.name} "
                     f"is out of range for circuit with {self.num_qubits} qubits",
                 )
+
+    def draw(self) -> None:
+        """Draws the circuit using text-based visualization."""
+        from qomputing.visualisation import draw_circuit
+        print(draw_circuit(self))
 
     def __repr__(self) -> str:  # pragma: no cover - debug helper
         return f"QuantumCircuit(num_qubits={self.num_qubits}, num_clbits={self.num_clbits}, gates={self._gates!r})"
