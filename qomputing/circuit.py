@@ -270,5 +270,10 @@ class QuantumCircuit:
         print(draw_circuit(self))
 
     def __repr__(self) -> str:  # pragma: no cover - debug helper
-        return f"QuantumCircuit(num_qubits={self.num_qubits}, num_clbits={self.num_clbits}, gates={self._gates!r})"
+        return (
+            f"QuantumCircuit(num_qubits={self.num_qubits}, "
+            f"num_clbits={self.num_clbits}, "
+            f"gates={self._gates!r}, "
+            f"measurements={self._measurements!r})"
+        )
 
