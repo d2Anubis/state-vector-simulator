@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from types import MappingProxyType
 from typing import Dict, Iterable, List, Mapping, Sequence, Tuple
 
 
@@ -24,6 +25,8 @@ class Gate:
     def __post_init__(self) -> None:
         name = self.name.lower()
         object.__setattr__(self, "name", name)
+        # Ensure params are immutable
+        object.__setattr__(self, "params", MappingProxyType(dict(self.params)))
 
         if not self.targets:
             raise ValueError("Gate must have at least one target qubit")
