@@ -30,16 +30,21 @@ def compute_linear_xeb_fidelity(
         raise ValueError("XEB fidelity requires at least one sample")
 
     num_qubits = len(samples[0])
-    dimension = 1 << num_qubits
+    if any(len(s) != num_qubits for s in samples):
+        raise ValueError("All samples must have the same bit-width")
+    if any(ch not in "01" for s in samples for ch in s):
+        raise ValueError("Samples must be binary strings")
 
     probs = list(ideal_probabilities)
+    dimension = 1 << num_qubits
     if len(probs) != dimension:
         raise ValueError("Ideal probability vector size does not match bitstring width")
 
-    prob_lookup = {format(index, f"0{num_qubits}b"): float(p) for index, p in enumerate(probs)}
-    average_p = sum(prob_lookup[bitstring] for bitstring in samples) / len(samples)
-    fidelity = dimension * average_p - 1.0
-    return fidelity
+    total = 0.0
+    for s in samples:
+        total += float(probs[int(s, 2)])
+    average_p = total / len(samples)
+    return dimension * average_p - 1.0
 
 
 def run_linear_xeb_experiment(
