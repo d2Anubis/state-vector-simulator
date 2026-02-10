@@ -48,6 +48,14 @@ class Gate:
 class QuantumCircuit:
     """Simple representation of a quantum circuit."""
 
+    def _repr_pretty_(self, p: Any, cycle: bool) -> None:
+        """IPython/Jupyter pretty print hook."""
+        if cycle:
+            p.text(f"QuantumCircuit({self.num_qubits}, {self.num_clbits})")
+        else:
+            from qomputing.visualisation import draw_circuit
+            p.text(draw_circuit(self))
+
     def __init__(self, num_qubits: int, num_clbits: int = 0) -> None:
         if num_qubits <= 0:
             raise ValueError("Circuit must have at least one qubit")
@@ -271,6 +279,22 @@ class QuantumCircuit:
         """Draws the circuit using text-based visualization."""
         from qomputing.visualisation import draw_circuit
         print(draw_circuit(self))
+
+    def draw_bloch(self, filename: str = None) -> Any:
+        """Draws the final state of the circuit on the Bloch Sphere (Single Qubit only)."""
+        from qomputing.backend import QomputingSimulator
+        from qomputing.visualisation_bloch import plot_bloch_multivector
+        
+        # Run state vector simulation
+        sim = QomputingSimulator.get_backend()
+        result = sim.run(self, shots=0)
+        state = result.get_statevector()
+        
+        # Plot
+        try:
+            return plot_bloch_multivector(state, filename=filename)
+        except ValueError as e:
+            print(f"Bloch Sphere Error: {e}")
 
     def __repr__(self) -> str:  # pragma: no cover - debug helper
         return (
