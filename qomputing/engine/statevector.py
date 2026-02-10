@@ -25,20 +25,32 @@ class StateVectorSimulator:
         shots: int | None = None,
         seed: int | None = None,
     ) -> SimulationResult:
+        if shots is not None and shots < 0:
+            raise ValueError("shots must be >= 0")
+
         state = linalg.initial_state(circuit.num_qubits, dtype=self.dtype)
+
         for gate in circuit.gates:
             state = registry.apply_gate(state, gate, circuit.num_qubits, self.dtype)
 
         probabilities = np.abs(state) ** 2
         result_shots = shots if shots and shots > 0 else None
+
         samples: Optional[List[str]] = None
         counts: Optional[Dict[str, int]] = None
+
         if result_shots:
             rng = np.random.default_rng(seed)
-            samples = measurements.sample_measurements(probabilities, circuit.num_qubits, result_shots, rng)
+            samples = measurements.sample_measurements(
+                probabilities, circuit.num_qubits, result_shots, rng
+            )
+
             if circuit.num_clbits and circuit._measurements:
                 counts = measurements.samples_to_classical_counts(
-                    samples, circuit.num_qubits, circuit._measurements, circuit.num_clbits
+                    samples,
+                    circuit.num_qubits,
+                    circuit._measurements,
+                    circuit.num_clbits,
                 )
             else:
                 counts = measurements.counts_from_samples(samples)
@@ -51,4 +63,3 @@ class StateVectorSimulator:
             samples=samples,
             counts=counts,
         )
-
