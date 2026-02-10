@@ -38,12 +38,36 @@ def _build_parser() -> argparse.ArgumentParser:
     simulate_parser.add_argument("--circuit", type=Path, required=True, help="Path to circuit JSON file")
     simulate_parser.add_argument("--shots", type=int, default=0, help="Number of measurement shots to sample")
     simulate_parser.add_argument("--seed", type=int, default=None, help="Random seed for sampling")
+    simulate_parser.add_argument(
+        "--max-qubits",
+        type=int,
+        default=StateVectorSimulator.DEFAULT_MAX_QUBITS,
+        help=f"Maximum allowed qubits (default: {StateVectorSimulator.DEFAULT_MAX_QUBITS})",
+    )
+    simulate_parser.add_argument(
+        "--max-shots",
+        type=int,
+        default=StateVectorSimulator.DEFAULT_MAX_SHOTS,
+        help=f"Maximum allowed shots (default: {StateVectorSimulator.DEFAULT_MAX_SHOTS})",
+    )
 
     rand_parser = subparsers.add_parser("random-circuit", help="Generate a random circuit and run XEB")
     rand_parser.add_argument("--qubits", type=int, required=True, help="Number of qubits")
     rand_parser.add_argument("--depth", type=int, required=True, help="Circuit depth (layers)")
     rand_parser.add_argument("--shots", type=int, required=True, help="Number of measurement shots")
     rand_parser.add_argument("--seed", type=int, default=None, help="Random seed for circuit generation and sampling")
+    rand_parser.add_argument(
+        "--max-qubits",
+        type=int,
+        default=StateVectorSimulator.DEFAULT_MAX_QUBITS,
+        help=f"Maximum allowed qubits (default: {StateVectorSimulator.DEFAULT_MAX_QUBITS})",
+    )
+    rand_parser.add_argument(
+        "--max-shots",
+        type=int,
+        default=StateVectorSimulator.DEFAULT_MAX_SHOTS,
+        help=f"Maximum allowed shots (default: {StateVectorSimulator.DEFAULT_MAX_SHOTS})",
+    )
     rand_parser.add_argument(
         "--single-qubit-gates",
         type=str,
@@ -71,7 +95,7 @@ def _build_parser() -> argparse.ArgumentParser:
 
 def _cmd_simulate(args: argparse.Namespace) -> int:
     circuit = _load_circuit(args.circuit)
-    simulator = StateVectorSimulator()
+    simulator = StateVectorSimulator(max_qubits=args.max_qubits, max_shots=args.max_shots)
     result = simulator.run(circuit, shots=args.shots, seed=args.seed)
     payload = {
         "num_qubits": circuit.num_qubits,
@@ -95,8 +119,10 @@ def _cmd_random_circuit(args: argparse.Namespace) -> int:
         multi_qubit_gates=args.multi_qubit_gates,
         seed=args.seed,
     )
+    simulator = StateVectorSimulator(max_qubits=args.max_qubits, max_shots=args.max_shots)
     xeb_result = run_linear_xeb_experiment(
         circuit,
+        simulator=simulator,
         shots=args.shots,
         seed=args.seed,
     )
@@ -118,4 +144,3 @@ def _load_circuit(path: Path) -> QuantumCircuit:
 
 if __name__ == "__main__":  # pragma: no cover
     raise SystemExit(main())
-
