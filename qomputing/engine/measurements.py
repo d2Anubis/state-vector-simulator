@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Dict, Iterable, List
+from typing import Dict, Iterable, List, Tuple
 
 import numpy as np
 
@@ -13,12 +13,18 @@ def sample_measurements(
     shots: int,
     rng: np.random.Generator,
 ) -> List[str]:
-    probabilities = probabilities / probabilities.sum()
+    """Sample bitstrings from a probability distribution."""
+    # Normalize probabilities to avoid floating point errors
+    prob_sum = probabilities.sum()
+    if prob_sum > 0:
+        probabilities = probabilities / prob_sum
+    
     basis_indices = rng.choice(len(probabilities), size=shots, p=probabilities)
     return [format(index, f"0{num_qubits}b") for index in basis_indices]
 
 
 def counts_from_samples(samples: Iterable[str]) -> Dict[str, int]:
+    """Convert a list of samples into a dictionary of counts."""
     counts: Dict[str, int] = {}
     for measurement in samples:
         counts[measurement] = counts.get(measurement, 0) + 1
@@ -28,10 +34,11 @@ def counts_from_samples(samples: Iterable[str]) -> Dict[str, int]:
 def samples_to_classical_counts(
     samples: List[str],
     num_qubits: int,
-    measure_map: List[tuple],
+    measure_map: List[Tuple[int, int]],
     num_clbits: int,
 ) -> Dict[str, int]:
     """Map full-state samples to classical-bit counts using (qubit, clbit) measure map.
+    
     Key is MSB-first (clbit 0 = LSB on the right), e.g. '0011' for Bell |11⟩ on (q0,q1).
     """
     counts: Dict[str, int] = {}
@@ -43,4 +50,3 @@ def samples_to_classical_counts(
         key = "".join(reversed(cl_bits))
         counts[key] = counts.get(key, 0) + 1
     return counts
-
