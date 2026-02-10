@@ -249,7 +249,7 @@ class QuantumCircuit:
             )
         for pair in payload.get("measurements", []):
             q, c = int(pair[0]), int(pair[1])
-            circuit._measurements.append((q, c))
+            circuit.measure([q], [c])
         return circuit
 
     # Internal helpers -----------------------------------------------------
