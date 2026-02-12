@@ -36,9 +36,10 @@ class StateVectorSimulator:
         if result_shots:
             rng = np.random.default_rng(seed)
             samples = measurements.sample_measurements(probabilities, circuit.num_qubits, result_shots, rng)
-            if circuit.num_clbits and circuit._measurements:
+            # [Fix: Use public measurements property instead of private member access]
+            if circuit.num_clbits and circuit.measurements:
                 counts = measurements.samples_to_classical_counts(
-                    samples, circuit.num_qubits, circuit._measurements, circuit.num_clbits
+                    samples, circuit.num_qubits, list(circuit.measurements), circuit.num_clbits
                 )
             else:
                 counts = measurements.counts_from_samples(samples)
