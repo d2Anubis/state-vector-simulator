@@ -79,4 +79,3 @@ def _relative_frequencies(samples: Iterable[str]) -> Dict[str, float]:
         counts[bitstring] = counts.get(bitstring, 0) + 1
         total += 1
     return {bitstring: count / total for bitstring, count in counts.items()}
-

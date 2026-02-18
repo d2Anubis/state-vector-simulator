@@ -15,8 +15,23 @@ from .result import SimulationResult
 class StateVectorSimulator:
     """State vector simulator delegating gate logic to handler modules."""
 
-    def __init__(self, *, dtype: np.dtype = np.complex128) -> None:
+    DEFAULT_MAX_QUBITS = 30
+    DEFAULT_MAX_SHOTS = 1_000_000
+
+    def __init__(
+        self,
+        *,
+        dtype: np.dtype = np.complex128,
+        max_qubits: int | None = DEFAULT_MAX_QUBITS,
+        max_shots: int | None = DEFAULT_MAX_SHOTS,
+    ) -> None:
+        if max_qubits is not None and max_qubits < 1:
+            raise ValueError("max_qubits must be >= 1 or None")
+        if max_shots is not None and max_shots < 1:
+            raise ValueError("max_shots must be >= 1 or None")
         self.dtype = dtype
+        self.max_qubits = max_qubits
+        self.max_shots = max_shots
 
     def run(
         self,
@@ -25,6 +40,11 @@ class StateVectorSimulator:
         shots: int | None = None,
         seed: int | None = None,
     ) -> SimulationResult:
+        if self.max_qubits is not None and circuit.num_qubits > self.max_qubits:
+            raise ValueError(f"num_qubits {circuit.num_qubits} exceeds max_qubits {self.max_qubits}")
+        if shots is not None and self.max_shots is not None and shots > self.max_shots:
+            raise ValueError(f"shots {shots} exceeds max_shots {self.max_shots}")
+
         state = linalg.initial_state(circuit.num_qubits, dtype=self.dtype)
         for gate in circuit.gates:
             state = registry.apply_gate(state, gate, circuit.num_qubits, self.dtype)
@@ -51,4 +71,3 @@ class StateVectorSimulator:
             samples=samples,
             counts=counts,
         )
-
