@@ -40,6 +40,8 @@ class StateVectorSimulator:
         shots: int | None = None,
         seed: int | None = None,
     ) -> SimulationResult:
+        if shots is not None and shots < 0:
+            raise ValueError("shots must be >= 0")
         if self.max_qubits is not None and circuit.num_qubits > self.max_qubits:
             raise ValueError(f"num_qubits {circuit.num_qubits} exceeds max_qubits {self.max_qubits}")
         if shots is not None and self.max_shots is not None and shots > self.max_shots:
