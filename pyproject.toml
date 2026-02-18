@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "qomputing"
-version = "0.1.5"
+version = "0.1.6"
 description = "Quantum computing state vector simulator with linear XEB benchmarking"
 readme = "README.md"
 authors = [

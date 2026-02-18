@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Publish qomputing to PyPI.
-# Run from repo root:  ./scripts/publish-to-pypi.sh
+# Publish qomputing to PyPI (maintainer only).
+# Bump version in pyproject.toml first; then from repo root:  ./scripts/publish-to-pypi.sh
 #
-# You need a PyPI account and API token: https://pypi.org/manage/account/token/
+# PyPI account and API token: https://pypi.org/manage/account/token/
 # Option A: Run this script; when prompted, use username __token__ and password <your token>
 # Option B: TWINE_USERNAME=__token__ TWINE_PASSWORD=pypi-xxx ./scripts/publish-to-pypi.sh
 
