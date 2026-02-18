@@ -17,6 +17,7 @@ import math
 import random
 from dataclasses import dataclass
 from typing import Dict, Iterable, List, Sequence, Tuple
+from qomputing.circuit_builders import random_circuit
 
 try:
     import cirq
@@ -64,14 +65,13 @@ def main(argv: Sequence[str] | None = None) -> int:
         for depth in args.depths:
             for circuit_index in range(args.circuits_per_config):
                 circuit_seed = rng.randint(0, 2**31 - 1)
-                circuit_rng = random.Random(circuit_seed)
-                circuit = _cli._random_circuit(
-                    num_qubits=num_qubits,
-                    depth=depth,
-                    single_qubit_gates=args.single_qubit_gates,
-                    two_qubit_gates=args.two_qubit_gates,
-                    multi_qubit_gates=args.multi_qubit_gates,
-                    seed=circuit_seed,
+                circuit = random_circuit(
+                num_qubits=num_qubits,
+                depth=depth,
+                single_qubit_gates=args.single_qubit_gates,
+                two_qubit_gates=args.two_qubit_gates,
+                multi_qubit_gates=args.multi_qubit_gates,
+                seed=circuit_seed,
                 )
                 metric = _compare_with_cirq(
                     circuit,
