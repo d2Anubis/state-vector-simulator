@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Dict, Iterable, List
+from typing import Dict, Iterable, List, Tuple
 
 import numpy as np
 
@@ -31,7 +31,7 @@ def counts_from_samples(samples: Iterable[str]) -> Dict[str, int]:
 def samples_to_classical_counts(
     samples: List[str],
     num_qubits: int,
-    measure_map: List[tuple],
+    measure_map: List[Tuple[int, int]],
     num_clbits: int,
 ) -> Dict[str, int]:
     """Map full-state samples to classical-bit counts using (qubit, clbit) measure map.
