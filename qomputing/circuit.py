@@ -57,6 +57,11 @@ class QuantumCircuit:
     def gates(self) -> Tuple[Gate, ...]:
         return tuple(self._gates)
 
+    @property
+    def measurements(self) -> Tuple[Tuple[int, int], ...]:
+        """Return the (qubit, clbit) measurement map."""
+        return tuple(self._measurements)
+
     def add_gate(
         self,
         name: str,
@@ -206,8 +211,22 @@ class QuantumCircuit:
         for c in clbits:
             if c < 0 or c >= self.num_clbits:
                 raise ValueError(f"Classical bit index {c} out of range for {self.num_clbits} classical bits")
+        existing_clbits = {pair[1] for pair in self._measurements}
+        for c in clbits:
+            if c in existing_clbits:
+                raise ValueError(f"Classical bit index {c} is already being used for measurement")
+            existing_clbits.add(c)
         self._measurements.extend(zip(qubits, clbits))
         return self
+
+    def measure_all(self) -> "QuantumCircuit":
+        """Measure all qubits into corresponding classical bits (q_i -> c_i). Requires num_clbits >= num_qubits."""
+        if self.num_clbits < self.num_qubits:
+            raise ValueError(
+                f"Cannot measure_all: circuit has {self.num_qubits} qubits "
+                f"but only {self.num_clbits} classical bits"
+            )
+        return self.measure(range(self.num_qubits), range(self.num_qubits))
 
     # Serialisation --------------------------------------------------------
     def to_dict(self) -> Dict[str, object]:
