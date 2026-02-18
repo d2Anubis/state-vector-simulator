@@ -13,7 +13,7 @@ def test_run_rejects_num_qubits_over_default_limit(monkeypatch: pytest.MonkeyPat
         raise AssertionError("initial_state should not be called when qubit limit is exceeded")
 
     monkeypatch.setattr(statevector_module.linalg, "initial_state", _fail_initial_state)
-    with pytest.raises(ValueError, match=r"num_qubits 31 exceeds max_qubits 30"):
+    with pytest.raises(ValueError, match=r"exceeding the simulator limit"):
         simulator.run(circuit)
 
 
