@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
 from typing import Sequence
 
@@ -70,7 +71,11 @@ def _build_parser() -> argparse.ArgumentParser:
 
 
 def _cmd_simulate(args: argparse.Namespace) -> int:
-    circuit = _load_circuit(args.circuit)
+    try:
+        circuit = _load_circuit(args.circuit)
+    except Exception as e:
+        print(f"Error loading circuit: {e}", file=sys.stderr)
+        return 1
     simulator = StateVectorSimulator()
     result = simulator.run(circuit, shots=args.shots, seed=args.seed)
     payload = {
