@@ -13,12 +13,10 @@ def sample_measurements(
     shots: int,
     rng: np.random.Generator,
 ) -> List[str]:
-    """Sample bitstrings from a probability distribution."""
-    # Normalize probabilities to avoid floating point errors
     prob_sum = probabilities.sum()
-    if prob_sum > 0:
-        probabilities = probabilities / prob_sum
-    
+    if prob_sum < 1e-10:
+        raise ValueError("Probability sum too small; state vector may be invalid.")
+    probabilities = probabilities / prob_sum
     basis_indices = rng.choice(len(probabilities), size=shots, p=probabilities)
     return [format(index, f"0{num_qubits}b") for index in basis_indices]
 

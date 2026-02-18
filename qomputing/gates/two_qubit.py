@@ -105,11 +105,12 @@ def apply_sqrtiswap(state: np.ndarray, gate: Gate, num_qubits: int, dtype: np.dt
     if len(gate.targets) != 2:
         raise ValueError("sqrtiswap gate requires two target qubits")
     q1, q2 = gate.targets
+    s = 1.0 / math.sqrt(2)
     matrix = np.array(
         [
             [1.0, 0.0, 0.0, 0.0],
-            [0.0, 0.5 + 0.5j, 0.5 - 0.5j, 0.0],
-            [0.0, 0.5 - 0.5j, 0.5 + 0.5j, 0.0],
+            [0.0, s, 1j * s, 0.0],
+            [0.0, 1j * s, s, 0.0],
             [0.0, 0.0, 0.0, 1.0],
         ],
         dtype=dtype,

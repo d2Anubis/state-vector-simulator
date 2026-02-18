@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from types import MappingProxyType
 from typing import Dict, Iterable, List, Mapping, Sequence, Tuple
 
 
-def _ensure_tuple(values: Sequence[int]) -> Tuple[int, ...]:
+def _ensure_tuple(values: Sequence[int] | int) -> Tuple[int, ...]:
+    if isinstance(values, int):
+        return (values,)
     return tuple(int(v) for v in values)
 
 
@@ -22,6 +25,8 @@ class Gate:
     def __post_init__(self) -> None:
         name = self.name.lower()
         object.__setattr__(self, "name", name)
+        # Ensure params are immutable
+        object.__setattr__(self, "params", MappingProxyType(dict(self.params)))
 
         if not self.targets:
             raise ValueError("Gate must have at least one target qubit")
@@ -43,6 +48,14 @@ class Gate:
 class QuantumCircuit:
     """Simple representation of a quantum circuit."""
 
+    def _repr_pretty_(self, p: Any, cycle: bool) -> None:
+        """IPython/Jupyter pretty print hook."""
+        if cycle:
+            p.text(f"QuantumCircuit({self.num_qubits}, {self.num_clbits})")
+        else:
+            from qomputing.visualisation import draw_circuit
+            p.text(draw_circuit(self))
+
     def __init__(self, num_qubits: int, num_clbits: int = 0) -> None:
         if num_qubits <= 0:
             raise ValueError("Circuit must have at least one qubit")
@@ -56,6 +69,11 @@ class QuantumCircuit:
     @property
     def gates(self) -> Tuple[Gate, ...]:
         return tuple(self._gates)
+
+    @property
+    def measurements(self) -> Tuple[Tuple[int, int], ...]:
+        """Return the (qubit, clbit) measurement map."""
+        return tuple(self._measurements)
 
     def add_gate(
         self,
@@ -79,56 +97,57 @@ class QuantumCircuit:
     def i(self, target: int) -> "QuantumCircuit":
         return self.add_gate("id", [target])
 
-    def x(self, target: int) -> "QuantumCircuit":
-        return self.add_gate("x", [target])
+    def x(self, target: int, *, controls: Sequence[int] | None = None) -> "QuantumCircuit":
+        return self.add_gate("x", [target], controls=controls)
 
-    def y(self, target: int) -> "QuantumCircuit":
-        return self.add_gate("y", [target])
+    def y(self, target: int, *, controls: Sequence[int] | None = None) -> "QuantumCircuit":
+        return self.add_gate("y", [target], controls=controls)
 
-    def z(self, target: int) -> "QuantumCircuit":
-        return self.add_gate("z", [target])
+    def z(self, target: int, *, controls: Sequence[int] | None = None) -> "QuantumCircuit":
+        return self.add_gate("z", [target], controls=controls)
 
-    def h(self, target: int) -> "QuantumCircuit":
-        return self.add_gate("h", [target])
+    def h(self, target: int, *, controls: Sequence[int] | None = None) -> "QuantumCircuit":
+        return self.add_gate("h", [target], controls=controls)
 
-    def s(self, target: int) -> "QuantumCircuit":
-        return self.add_gate("s", [target])
+    def s(self, target: int, *, controls: Sequence[int] | None = None) -> "QuantumCircuit":
+        return self.add_gate("s", [target], controls=controls)
 
-    def sdg(self, target: int) -> "QuantumCircuit":
-        return self.add_gate("sdg", [target])
+    def sdg(self, target: int, *, controls: Sequence[int] | None = None) -> "QuantumCircuit":
+        return self.add_gate("sdg", [target], controls=controls)
 
-    def t(self, target: int) -> "QuantumCircuit":
-        return self.add_gate("t", [target])
+    def t(self, target: int, *, controls: Sequence[int] | None = None) -> "QuantumCircuit":
+        return self.add_gate("t", [target], controls=controls)
 
-    def tdg(self, target: int) -> "QuantumCircuit":
-        return self.add_gate("tdg", [target])
+    def tdg(self, target: int, *, controls: Sequence[int] | None = None) -> "QuantumCircuit":
+        return self.add_gate("tdg", [target], controls=controls)
 
-    def sx(self, target: int) -> "QuantumCircuit":
-        return self.add_gate("sx", [target])
+    def sx(self, target: int, *, controls: Sequence[int] | None = None) -> "QuantumCircuit":
+        return self.add_gate("sx", [target], controls=controls)
 
-    def sxdg(self, target: int) -> "QuantumCircuit":
-        return self.add_gate("sxdg", [target])
+    def sxdg(self, target: int, *, controls: Sequence[int] | None = None) -> "QuantumCircuit":
+        return self.add_gate("sxdg", [target], controls=controls)
 
-    def rx(self, target: int, theta: float) -> "QuantumCircuit":
-        return self.add_gate("rx", [target], params={"theta": float(theta)})
+    def rx(self, target: int, theta: float, *, controls: Sequence[int] | None = None) -> "QuantumCircuit":
+        return self.add_gate("rx", [target], params={"theta": float(theta)}, controls=controls)
 
-    def ry(self, target: int, theta: float) -> "QuantumCircuit":
-        return self.add_gate("ry", [target], params={"theta": float(theta)})
+    def ry(self, target: int, theta: float, *, controls: Sequence[int] | None = None) -> "QuantumCircuit":
+        return self.add_gate("ry", [target], params={"theta": float(theta)}, controls=controls)
 
-    def rz(self, target: int, theta: float) -> "QuantumCircuit":
-        return self.add_gate("rz", [target], params={"theta": float(theta)})
+    def rz(self, target: int, theta: float, *, controls: Sequence[int] | None = None) -> "QuantumCircuit":
+        return self.add_gate("rz", [target], params={"theta": float(theta)}, controls=controls)
 
-    def u1(self, target: int, lam: float) -> "QuantumCircuit":
-        return self.add_gate("u1", [target], params={"lambda": float(lam)})
+    def u1(self, target: int, lam: float, *, controls: Sequence[int] | None = None) -> "QuantumCircuit":
+        return self.add_gate("u1", [target], params={"lambda": float(lam)}, controls=controls)
 
-    def u2(self, target: int, phi: float, lam: float) -> "QuantumCircuit":
-        return self.add_gate("u2", [target], params={"phi": float(phi), "lambda": float(lam)})
+    def u2(self, target: int, phi: float, lam: float, *, controls: Sequence[int] | None = None) -> "QuantumCircuit":
+        return self.add_gate("u2", [target], params={"phi": float(phi), "lambda": float(lam)}, controls=controls)
 
-    def u3(self, target: int, theta: float, phi: float, lam: float) -> "QuantumCircuit":
+    def u3(self, target: int, theta: float, phi: float, lam: float, *, controls: Sequence[int] | None = None) -> "QuantumCircuit":
         return self.add_gate(
             "u3",
             [target],
             params={"theta": float(theta), "phi": float(phi), "lambda": float(lam)},
+            controls=controls,
         )
 
     def cx(self, control: int, target: int) -> "QuantumCircuit":
@@ -206,8 +225,22 @@ class QuantumCircuit:
         for c in clbits:
             if c < 0 or c >= self.num_clbits:
                 raise ValueError(f"Classical bit index {c} out of range for {self.num_clbits} classical bits")
+        existing_clbits = {pair[1] for pair in self._measurements}
+        for c in clbits:
+            if c in existing_clbits:
+                raise ValueError(f"Classical bit index {c} is already being used for measurement")
+            existing_clbits.add(c)
         self._measurements.extend(zip(qubits, clbits))
         return self
+
+    def measure_all(self) -> "QuantumCircuit":
+        """Measure all qubits into corresponding classical bits (q_i -> c_i). Requires num_clbits >= num_qubits."""
+        if self.num_clbits < self.num_qubits:
+            raise ValueError(
+                f"Cannot measure_all: circuit has {self.num_qubits} qubits "
+                f"but only {self.num_clbits} classical bits"
+            )
+        return self.measure(range(self.num_qubits), range(self.num_qubits))
 
     # Serialisation --------------------------------------------------------
     def to_dict(self) -> Dict[str, object]:
@@ -249,7 +282,7 @@ class QuantumCircuit:
             )
         for pair in payload.get("measurements", []):
             q, c = int(pair[0]), int(pair[1])
-            circuit._measurements.append((q, c))
+            circuit.measure([q], [c])
         return circuit
 
     # Internal helpers -----------------------------------------------------
@@ -261,6 +294,32 @@ class QuantumCircuit:
                     f"is out of range for circuit with {self.num_qubits} qubits",
                 )
 
+    def draw(self) -> None:
+        """Draws the circuit using text-based visualization."""
+        from qomputing.visualisation import draw_circuit
+        print(draw_circuit(self))
+
+    def draw_bloch(self, filename: str = None) -> Any:
+        """Draws the final state of the circuit on the Bloch Sphere (Single Qubit only)."""
+        from qomputing.backend import QomputingSimulator
+        from qomputing.visualisation_bloch import plot_bloch_multivector
+        
+        # Run state vector simulation
+        sim = QomputingSimulator.get_backend()
+        result = sim.run(self, shots=0)
+        state = result.get_statevector()
+        
+        # Plot
+        try:
+            return plot_bloch_multivector(state, filename=filename)
+        except ValueError as e:
+            print(f"Bloch Sphere Error: {e}")
+
     def __repr__(self) -> str:  # pragma: no cover - debug helper
-        return f"QuantumCircuit(num_qubits={self.num_qubits}, num_clbits={self.num_clbits}, gates={self._gates!r})"
+        return (
+            f"QuantumCircuit(num_qubits={self.num_qubits}, "
+            f"num_clbits={self.num_clbits}, "
+            f"gates={self._gates!r}, "
+            f"measurements={self._measurements!r})"
+        )
 
