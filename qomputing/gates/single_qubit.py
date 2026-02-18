@@ -178,6 +178,68 @@ def apply_u3(state: np.ndarray, gate: Gate, num_qubits: int, dtype: np.dtype) ->
     return _apply_matrix(state, gate, num_qubits, matrix)
 
 
+def get_matrix(gate: Gate, dtype: np.dtype = np.complex128) -> np.ndarray:
+    """Return the 2x2 unitary matrix for a single-qubit gate."""
+    name = gate.name
+    if name == "id":
+        return np.eye(2, dtype=dtype)
+    if name == "x":
+        return np.array([[0, 1], [1, 0]], dtype=dtype)
+    if name == "y":
+        return np.array([[0, -1j], [1j, 0]], dtype=dtype)
+    if name == "z":
+        return np.array([[1, 0], [0, -1]], dtype=dtype)
+    if name == "h":
+        return (1 / math.sqrt(2)) * np.array([[1, 1], [1, -1]], dtype=dtype)
+    if name == "s":
+        return np.array([[1, 0], [0, 1j]], dtype=dtype)
+    if name == "sdg":
+        return np.array([[1, 0], [0, -1j]], dtype=dtype)
+    if name == "t":
+        return np.array([[1, 0], [0, cmath.exp(1j * math.pi / 4)]], dtype=dtype)
+    if name == "tdg":
+        return np.array([[1, 0], [0, cmath.exp(-1j * math.pi / 4)]], dtype=dtype)
+    if name == "sx":
+        return 0.5 * np.array([[1 + 1j, 1 - 1j], [1 - 1j, 1 + 1j]], dtype=dtype)
+    if name == "sxdg":
+        return 0.5 * np.array([[1 - 1j, 1 + 1j], [1 + 1j, 1 - 1j]], dtype=dtype)
+    
+    # Parameterized gates
+    if name == "rx":
+        theta = float(gate.params.get("theta", 0.0))
+        half = theta / 2.0
+        return np.array([[math.cos(half), -1j * math.sin(half)], [-1j * math.sin(half), math.cos(half)]], dtype=dtype)
+    if name == "ry":
+        theta = float(gate.params.get("theta", 0.0))
+        half = theta / 2.0
+        return np.array([[math.cos(half), -math.sin(half)], [math.sin(half), math.cos(half)]], dtype=dtype)
+    if name == "rz":
+        theta = float(gate.params.get("theta", 0.0))
+        half = theta / 2.0
+        return np.array([[cmath.exp(-1j * half), 0], [0, cmath.exp(1j * half)]], dtype=dtype)
+    if name == "u1":
+        lam = float(gate.params.get("lambda", 0.0))
+        return np.array([[1.0, 0.0], [0.0, cmath.exp(1j * lam)]], dtype=dtype)
+    if name == "u2":
+        phi = float(gate.params.get("phi", 0.0))
+        lam = float(gate.params.get("lambda", 0.0))
+        return (1 / math.sqrt(2)) * np.array(
+            [[1.0, -cmath.exp(1j * lam)], [cmath.exp(1j * phi), cmath.exp(1j * (phi + lam))]], dtype=dtype
+        )
+    if name == "u3":
+        theta = float(gate.params.get("theta", 0.0))
+        phi = float(gate.params.get("phi", 0.0))
+        lam = float(gate.params.get("lambda", 0.0))
+        cos = math.cos(theta / 2.0)
+        sin = math.sin(theta / 2.0)
+        return np.array(
+            [[cos, -cmath.exp(1j * lam) * sin], [cmath.exp(1j * phi) * sin, cmath.exp(1j * (phi + lam)) * cos]],
+            dtype=dtype,
+        )
+            
+    raise ValueError(f"Unknown single qubit gate matrix: {name}")
+
+
 HANDLERS: Dict[str, SingleQubitHandler] = {
     "id": apply_identity,
     "x": apply_x,
@@ -200,5 +262,5 @@ HANDLERS: Dict[str, SingleQubitHandler] = {
 
 GATE_NAMES: List[str] = list(HANDLERS.keys())
 
-__all__ = ["HANDLERS", "GATE_NAMES", "SingleQubitHandler"]
+__all__ = ["HANDLERS", "GATE_NAMES", "SingleQubitHandler", "get_matrix"]
 

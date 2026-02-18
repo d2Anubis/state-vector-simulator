@@ -43,10 +43,14 @@ class StateVectorSimulator:
         if shots is not None and shots < 0:
             raise ValueError("shots must be >= 0")
         if self.max_qubits is not None and circuit.num_qubits > self.max_qubits:
-            raise ValueError(f"num_qubits {circuit.num_qubits} exceeds max_qubits {self.max_qubits}")
+            gb_required = (1 << circuit.num_qubits) * np.dtype(self.dtype).itemsize / (1024**3)
+            raise ValueError(
+                f"Circuit has {circuit.num_qubits} qubits, exceeding the simulator limit of {self.max_qubits}. "
+                f"This requires approx {gb_required:.2f} GB of RAM. "
+                "Increase 'max_qubits' in StateVectorSimulator if you have enough memory."
+            )
         if shots is not None and self.max_shots is not None and shots > self.max_shots:
             raise ValueError(f"shots {shots} exceeds max_shots {self.max_shots}")
-
         state = linalg.initial_state(circuit.num_qubits, dtype=self.dtype)
         for gate in circuit.gates:
             state = registry.apply_gate(state, gate, circuit.num_qubits, self.dtype)
