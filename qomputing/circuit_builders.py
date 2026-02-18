@@ -72,7 +72,7 @@ def random_circuit(
         if num_qubits > 2 and multi_qubit_gates:
             gate_name = rng.choice(multi_qubit_gates)
             if gate_name not in multi_specs:
-                raise ValueError(f"Unsupported multi-qubit gate in random circuit: {gate_name}")
+                raise ValueError(f"Unsupported multi-qubit gate: {gate_name}")
             controls_required, targets_required = multi_specs[gate_name]
             total_required = controls_required + targets_required
             if num_qubits >= total_required:
@@ -82,6 +82,13 @@ def random_circuit(
                 _apply_multi_qubit_gate(circuit, gate_name, controls, targets, rng)
 
     return circuit
+
+
+def _validate_angle(gate_name: str, angle: float | None) -> float:
+    """Ensure rotation gates receive a valid numerical angle."""
+    if angle is None or not isinstance(angle, (float, int)):
+        raise ValueError(f"Rotation gate {gate_name} requires a valid float angle.")
+    return float(angle)
 
 
 def _apply_single_qubit_gate(
@@ -113,23 +120,31 @@ def _apply_single_qubit_gate(
         circuit.sx(qubit)
     elif gate_name == "sxdg":
         circuit.sxdg(qubit)
-    elif gate_name == "rx":
-        circuit.rx(qubit, rng.uniform(0.0, two_pi))
-    elif gate_name == "ry":
-        circuit.ry(qubit, rng.uniform(0.0, two_pi))
-    elif gate_name == "rz":
-        circuit.rz(qubit, rng.uniform(0.0, two_pi))
-    elif gate_name == "u1":
-        circuit.u1(qubit, rng.uniform(0.0, two_pi))
-    elif gate_name == "u2":
-        circuit.u2(qubit, rng.uniform(0.0, two_pi), rng.uniform(0.0, two_pi))
-    elif gate_name == "u3":
-        circuit.u3(
-            qubit,
-            rng.uniform(0.0, two_pi),
-            rng.uniform(0.0, two_pi),
-            rng.uniform(0.0, two_pi),
-        )
+    elif gate_name in {"rx", "ry", "rz", "u1", "u2", "u3"}:
+        if gate_name == "rx":
+            angle = _validate_angle(gate_name, rng.uniform(0.0, two_pi))
+            circuit.rx(qubit, angle)
+        elif gate_name == "ry":
+            angle = _validate_angle(gate_name, rng.uniform(0.0, two_pi))
+            circuit.ry(qubit, angle)
+        elif gate_name == "rz":
+            angle = _validate_angle(gate_name, rng.uniform(0.0, two_pi))
+            circuit.rz(qubit, angle)
+        elif gate_name == "u1":
+            circuit.u1(qubit, _validate_angle("u1", rng.uniform(0.0, two_pi)))
+        elif gate_name == "u2":
+            circuit.u2(
+                qubit,
+                _validate_angle("u2", rng.uniform(0.0, two_pi)),
+                _validate_angle("u2", rng.uniform(0.0, two_pi)),
+            )
+        elif gate_name == "u3":
+            circuit.u3(
+                qubit,
+                _validate_angle("u3", rng.uniform(0.0, two_pi)),
+                _validate_angle("u3", rng.uniform(0.0, two_pi)),
+                _validate_angle("u3", rng.uniform(0.0, two_pi)),
+            )
     else:
         raise ValueError(f"Unsupported single-qubit gate: {gate_name}")
 
@@ -149,7 +164,8 @@ def _apply_two_qubit_gate(
     elif gate_name == "cz":
         circuit.cz(q1, q2)
     elif gate_name == "cp":
-        circuit.cp(q1, q2, rng.uniform(0.0, two_pi))
+        angle = _validate_angle("cp", rng.uniform(0.0, two_pi))
+        circuit.cp(q1, q2, angle)
     elif gate_name == "swap":
         circuit.swap(q1, q2)
     elif gate_name == "iswap":
@@ -165,7 +181,7 @@ def _apply_two_qubit_gate(
     elif gate_name == "csx":
         circuit.csx(q1, q2)
     else:
-        raise ValueError(f"Unsupported two-qubit gate in random circuit: {gate_name}")
+        raise ValueError(f"Unsupported two-qubit gate: {gate_name}")
 
 
 def _apply_multi_qubit_gate(
@@ -182,4 +198,4 @@ def _apply_multi_qubit_gate(
     elif gate_name == "cswap":
         circuit.cswap(controls[0], targets[0], targets[1])
     else:
-        raise ValueError(f"Unsupported multi-qubit gate in random circuit: {gate_name}")
+        raise ValueError(f"Unsupported multi-qubit gate: {gate_name}")
