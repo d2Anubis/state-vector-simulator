@@ -18,7 +18,9 @@ from .gates import (
 from .simulator import StateVectorSimulator
 from .xeb import run_linear_xeb_experiment
 
+
 def main(argv: Sequence[str] | None = None) -> int:
+    """Entry point for the simulator CLI."""
     parser = _build_parser()
     args = parser.parse_args(argv)
 
@@ -32,9 +34,11 @@ def main(argv: Sequence[str] | None = None) -> int:
 
 
 def _build_parser() -> argparse.ArgumentParser:
+    """Construct the argument parser."""
     parser = argparse.ArgumentParser(description="State vector simulator CLI")
     subparsers = parser.add_subparsers(dest="command")
 
+    # Subcommand: simulate
     simulate_parser = subparsers.add_parser("simulate", help="Simulate a circuit from JSON")
     simulate_parser.add_argument("--circuit", type=Path, required=True, help="Path to circuit JSON file")
     simulate_parser.add_argument("--shots", type=int, default=0, help="Number of measurement shots to sample")
@@ -52,11 +56,25 @@ def _build_parser() -> argparse.ArgumentParser:
         help=f"Maximum allowed shots (default: {StateVectorSimulator.DEFAULT_MAX_SHOTS})",
     )
 
+    # Subcommand: random-circuit
     rand_parser = subparsers.add_parser("random-circuit", help="Generate a random circuit and run XEB")
     rand_parser.add_argument("--qubits", type=int, required=True, help="Number of qubits")
     rand_parser.add_argument("--depth", type=int, required=True, help="Circuit depth (layers)")
     rand_parser.add_argument("--shots", type=int, required=True, help="Number of measurement shots")
     rand_parser.add_argument("--seed", type=int, default=None, help="Random seed for circuit generation and sampling")
+    
+    rand_parser.add_argument(
+        "--max-qubits",
+        type=int,
+        default=StateVectorSimulator.DEFAULT_MAX_QUBITS,
+        help=f"Maximum allowed qubits (default: {StateVectorSimulator.DEFAULT_MAX_QUBITS})",
+    )
+    rand_parser.add_argument(
+        "--max-shots",
+        type=int,
+        default=StateVectorSimulator.DEFAULT_MAX_SHOTS,
+        help=f"Maximum allowed shots (default: {StateVectorSimulator.DEFAULT_MAX_SHOTS})",
+    )
     rand_parser.add_argument(
         "--max-qubits",
         type=int,
@@ -102,6 +120,7 @@ def _cmd_simulate(args: argparse.Namespace) -> int:
         return 1
     simulator = StateVectorSimulator(max_qubits=args.max_qubits, max_shots=args.max_shots)
     result = simulator.run(circuit, shots=args.shots, seed=args.seed)
+    
     payload = {
         "num_qubits": circuit.num_qubits,
         "shots": result.shots,
@@ -116,6 +135,8 @@ def _cmd_simulate(args: argparse.Namespace) -> int:
 
 
 def _cmd_random_circuit(args: argparse.Namespace) -> int:
+    """Execute the random-circuit command."""
+    # Build the random circuit based on CLI arguments
     circuit = random_circuit(
         num_qubits=args.qubits,
         depth=args.depth,
@@ -131,6 +152,7 @@ def _cmd_random_circuit(args: argparse.Namespace) -> int:
         shots=args.shots,
         seed=args.seed,
     )
+
     payload = {
         "num_qubits": circuit.num_qubits,
         "depth": args.depth,
@@ -143,6 +165,8 @@ def _cmd_random_circuit(args: argparse.Namespace) -> int:
 
 
 def _load_circuit(path: Path) -> QuantumCircuit:
+    """Helper to load a circuit from a file."""
+    # Delayed import to avoid circular dependencies if .run imports .cli
     from .run import load_circuit
     return load_circuit(path)
 

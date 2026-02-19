@@ -22,6 +22,7 @@ def sample_measurements(
 
 
 def counts_from_samples(samples: Iterable[str]) -> Dict[str, int]:
+    """Convert a list of samples into a dictionary of counts."""
     counts: Dict[str, int] = {}
     for measurement in samples:
         counts[measurement] = counts.get(measurement, 0) + 1
@@ -35,6 +36,7 @@ def samples_to_classical_counts(
     num_clbits: int,
 ) -> Dict[str, int]:
     """Map full-state samples to classical-bit counts using (qubit, clbit) measure map.
+    
     Key is MSB-first (clbit 0 = LSB on the right), e.g. '0011' for Bell |11⟩ on (q0,q1).
     """
     counts: Dict[str, int] = {}
@@ -46,4 +48,3 @@ def samples_to_classical_counts(
         key = "".join(reversed(cl_bits))
         counts[key] = counts.get(key, 0) + 1
     return counts
-
